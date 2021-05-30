@@ -70,7 +70,7 @@ exec(char *path, char **argv)
   }
 
   clearpteu(pgdir, (char*)(KERNBASE - (2*PGSIZE)));
-  curproc->boundary = KERNBASE;
+  curproc->numPages = 1;
   sp = KERNBASE-1;
 
   // Push argument strings, prepare rest of stack in ustack.
