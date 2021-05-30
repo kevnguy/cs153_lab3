@@ -323,6 +323,8 @@ copyuvm(pde_t *pgdir, uint sz)
   pte_t *pte;
   uint pa, i, flags;
   char *mem;
+    struct proc *curproc = myproc();
+    //cprintf("numpages test %d\n", curproc->numPages);
 
   if((d = setupkvm()) == 0)
     return 0;
@@ -341,7 +343,7 @@ copyuvm(pde_t *pgdir, uint sz)
   }
 
   //second loop for stack
-  for(i = (KERNBASE - (2*PGSIZE)); i < KERNBASE-1; i += PGSIZE){
+  for(i = (KERNBASE - (curproc->numPages*PGSIZE)); i < KERNBASE-1; i += PGSIZE){
       if((pte = walkpgdir(pgdir, (void *) i, 0)) == 0)
           panic("copyuvm: Stack pte should exist");
       if(!(*pte & PTE_P))
