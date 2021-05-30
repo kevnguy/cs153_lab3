@@ -63,11 +63,15 @@ exec(char *path, char **argv)
   // Allocate two pages at the next page boundary.
   // Make the first inaccessible.  Use the second as the user stack.
   sz = PGROUNDUP(sz);
-  if((sp = allocuvm(pgdir, KERNBASE - 1 - (2*PGSIZE), KERNBASE - 1)) == 0)
-    goto bad;
-  clearpteu(pgdir, (char*)(sz - 2*PGSIZE));
+  cprintf("%x\n%x\n vs\n %x\n", PGROUNDDOWN(KERNBASE-1),KERNBASE-1, KERNBASE-(2*PGSIZE));
+  if((sp = allocuvm(pgdir, KERNBASE-(2*PGSIZE), KERNBASE-1)) == 0){
+      cprintf("Out of range\n");
+      goto bad;
+  }
+
+  clearpteu(pgdir, (char*)(KERNBASE - (2*PGSIZE)));
   curproc->boundary = KERNBASE;
-  //sp = sz;
+  sp = KERNBASE-1;
 
   // Push argument strings, prepare rest of stack in ustack.
   for(argc = 0; argv[argc]; argc++) {
@@ -87,7 +91,6 @@ exec(char *path, char **argv)
   sp -= (3+argc+1) * 4;
   if(copyout(pgdir, sp, ustack, (3+argc+1)*4) < 0)
     goto bad;
-
   // Save program name for debugging.
   for(last=s=path; *s; s++)
     if(*s == '/')

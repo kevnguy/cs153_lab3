@@ -224,8 +224,12 @@ allocuvm(pde_t *pgdir, uint oldsz, uint newsz)
   char *mem;
   uint a;
 
-  if(newsz >= KERNBASE)
-    return 0;
+  //if(newsz >= KERNBASE - 2*PGSIZE){
+  // suppose to be this for heap but ig not?
+  if(newsz >= KERNBASE){
+      cprintf("newsz too large\n");
+      return 0;
+  }
   if(newsz < oldsz)
     return oldsz;
 
@@ -335,18 +339,22 @@ copyuvm(pde_t *pgdir, uint sz)
     if(mappages(d, (void*)i, PGSIZE, V2P(mem), flags) < 0)
       goto bad;
   }
-  for(i = (KERNBASE - (2*PGSIZE)); i < KERNBASE; i += PGSIZE){
+
+  //second loop for stack
+  for(i = (KERNBASE - (2*PGSIZE)); i < KERNBASE-1; i += PGSIZE){
       if((pte = walkpgdir(pgdir, (void *) i, 0)) == 0)
-          panic("copyuvm: pte should exist");
+          panic("copyuvm: Stack pte should exist");
       if(!(*pte & PTE_P))
-          panic("copyuvm: page not present");
+          panic("copyuvm: Stack page not present");
       pa = PTE_ADDR(*pte);
       flags = PTE_FLAGS(*pte);
       if((mem = kalloc()) == 0)
           goto bad;
       memmove(mem, (char*)P2V(pa), PGSIZE);
-      if(mappages(d, (void*)i, PGSIZE, V2P(mem), flags) < 0)
+      if(mappages(d, (void*)i, PGSIZE, V2P(mem), flags) < 0) {
+          cprintf("Map fail\n");
           goto bad;
+      }
   }
   return d;
 
