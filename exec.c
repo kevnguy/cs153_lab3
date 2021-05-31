@@ -63,12 +63,12 @@ exec(char *path, char **argv)
   // Allocate two pages at the next page boundary.
   // Make the first inaccessible.  Use the second as the user stack.
   sz = PGROUNDUP(sz);
-  cprintf("%x\n%x\n vs\n %x\n", PGROUNDDOWN(KERNBASE-1),KERNBASE-1, KERNBASE-(2*PGSIZE));
+  //cprintf("%x\n%x\n vs\n %x\n", PGROUNDDOWN(KERNBASE-1), KERNBASE-1, KERNBASE-(2*PGSIZE));
   if((sp = allocuvm(pgdir, KERNBASE-(2*PGSIZE), KERNBASE-1)) == 0){
-      cprintf("Out of range\n");
       goto bad;
   }
-
+  // Set page guard for part 1
+  // No longer need to be able to grow stack
   clearpteu(pgdir, (char*)(KERNBASE - (2*PGSIZE)));
   curproc->numPages = 1;
   sp = KERNBASE-1;

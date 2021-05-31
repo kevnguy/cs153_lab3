@@ -78,7 +78,40 @@ trap(struct trapframe *tf)
     lapiceoi();
     break;
 
+  case T_PGFLT: {
+    unsigned int address = rcr2();
+    struct proc* p = myproc();
+
+    unsigned int res;
+    unsigned int upper = KERNBASE - ((p->numPages+1)*PGSIZE);
+    unsigned int lower = KERNBASE - ((p->numPages+2)*PGSIZE);
+    //cprintf("Offending addr: %x lower: %x upper: %x\n", address, lower, upper);
+
+    // if within 1 page range
+    if(PGROUNDUP(address-PGSIZE) <= upper && PGROUNDUP(address-PGSIZE) >= lower){
+        unsigned int newLower = upper-PGSIZE;
+        unsigned int newUpper = upper;
+        //cprintf("TRAP oldsz: %x newsz: %x\n", newLower, newUpper);
+        res = allocuvm(p->pgdir, newLower, newUpper);
+        if (res == 0) {
+            cprintf("T_PGFLT: allocuvm failed\n");
+            goto BackToDefault;
+        } else {
+            pte_t *pgdir = p->pgdir;
+            p->numPages += 1;
+            clearpteu(pgdir, (char*)(newLower));
+            enablepteu(pgdir, (char*)(newUpper));
+            cprintf("T_PGFLT: Increased stack size to: %d\n\n", p->numPages);
+        }
+    }
+    // else panic like normal
+    else {
+        goto BackToDefault;
+    }
+    break;
+  }
   //PAGEBREAK: 13
+BackToDefault:
   default:
     if(myproc() == 0 || (tf->cs&3) == 0){
       // In kernel, it must be our mistake.
