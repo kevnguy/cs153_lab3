@@ -224,15 +224,13 @@ allocuvm(pde_t *pgdir, uint oldsz, uint newsz)
   char *mem;
   uint a;
 
-  //if(newsz >= KERNBASE - 2*PGSIZE){
-  // suppose to be this for heap but ig not?
   if(newsz >= KERNBASE){
-      cprintf("newsz too large\n");
+      cprintf("newsz reached Kernel\n");
       return 0;
   }
+
   if(newsz < oldsz)
     return oldsz;
-
   a = PGROUNDUP(oldsz);
   for(; a < newsz; a += PGSIZE){
     mem = kalloc();
@@ -312,6 +310,21 @@ clearpteu(pde_t *pgdir, char *uva)
   if(pte == 0)
     panic("clearpteu");
   *pte &= ~PTE_U;
+  //cprintf("disable PTE: %x on pg: %x called on dir: %x\n", *pte, uva, pgdir);
+}
+
+// Enables PTE_U
+// used for lab3 and stack growth
+void
+enablepteu(pde_t *pgdir, char *uva)
+{
+    pte_t *pte;
+
+    pte = walkpgdir(pgdir, uva, 0);
+    if(pte == 0)
+        panic("enablepteu");
+    *pte |= PTE_U;
+    //cprintf("enable PTE: %x on PG: %x called on dir: %x\n", *pte, uva, pgdir);
 }
 
 // Given a parent process's page table, create a copy
@@ -323,11 +336,12 @@ copyuvm(pde_t *pgdir, uint sz)
   pte_t *pte;
   uint pa, i, flags;
   char *mem;
-    struct proc *curproc = myproc();
-    //cprintf("numpages test %d\n", curproc->numPages);
+  struct proc *curproc = myproc();
+  //cprintf("numpages test %d\n", curproc->numPages);
 
   if((d = setupkvm()) == 0)
     return 0;
+  // Copy user data to heap
   for(i = 0; i < sz; i += PGSIZE){
     if((pte = walkpgdir(pgdir, (void *) i, 0)) == 0)
       panic("copyuvm: pte should exist");
@@ -342,7 +356,7 @@ copyuvm(pde_t *pgdir, uint sz)
       goto bad;
   }
 
-  //second loop for stack
+  // Second loop for stack
   for(i = (KERNBASE - (curproc->numPages*PGSIZE)); i < KERNBASE-1; i += PGSIZE){
       if((pte = walkpgdir(pgdir, (void *) i, 0)) == 0)
           panic("copyuvm: Stack pte should exist");
