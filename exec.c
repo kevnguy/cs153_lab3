@@ -68,7 +68,6 @@ exec(char *path, char **argv)
       goto bad;
   }
   // Set page guard for part 1
-  // No longer need to be able to grow stack
   clearpteu(pgdir, (char*)(KERNBASE - (2*PGSIZE)));
   curproc->numPages = 1;
   sp = KERNBASE-1;

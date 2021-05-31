@@ -85,13 +85,11 @@ trap(struct trapframe *tf)
     unsigned int res;
     unsigned int upper = KERNBASE - ((p->numPages+1)*PGSIZE);
     unsigned int lower = KERNBASE - ((p->numPages+2)*PGSIZE);
-    //cprintf("Offending addr: %x lower: %x upper: %x\n", address, lower, upper);
 
-    // if within 1 page range
+    // Checking if address is from the page guard
     if(PGROUNDUP(address-PGSIZE) <= upper && PGROUNDUP(address-PGSIZE) >= lower){
         unsigned int newLower = upper-PGSIZE;
         unsigned int newUpper = upper;
-        //cprintf("TRAP oldsz: %x newsz: %x\n", newLower, newUpper);
         res = allocuvm(p->pgdir, newLower, newUpper);
         if (res == 0) {
             cprintf("T_PGFLT: allocuvm failed\n");
