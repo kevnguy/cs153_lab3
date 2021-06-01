@@ -9,7 +9,7 @@ struct shm_cnt {
 };
 
 int main(int argc, char *argv[]){
-    int pid;
+    int pid, res;
     int i=0;
     struct shm_cnt *counter;
     pid=fork();
@@ -19,9 +19,12 @@ int main(int argc, char *argv[]){
     // we get the virtual address of the page returned into counter
     // which we can now use but will be shared between the two processes
   
-    shm_open(1,(char **)&counter);
- 
-    // printf(1,"%s returned successfully from shm_open with counter %x\n", pid? "Child": "Parent", counter);
+    res = shm_open(1,(char **)&counter);
+    if(res == -1) {
+        printf(1, "main: Error shm_open\n");
+        return -1;
+    }
+    //printf(1,"%s returned successfully from shm_open with counter %x\n", pid? "Child": "Parent", counter);
     for(i = 0; i < 10000; i++) {
         uacquire(&(counter->lock));
         counter->cnt++;
