@@ -96,11 +96,26 @@ int shm_open(int id, char **pointer) {
 
 int shm_close(int id) {
 //you write this too!
+    unsigned char i;
 
+    initlock(&(shm_table.lock), "SHM lock");
+    acquire(&(shm_table.lock));
 
-
-
-return 0; //added to remove compiler warning -- you should decide what to return
+    for (i = 0; i< 64; i++) {
+        if(shm_table.shm_pages[i].id == id) {
+            shm_table.shm_pages[i].refcnt--;
+            if(shm_table.shm_pages[i].refcnt < 1) {
+                shm_table.shm_pages[i].id = 0;
+                shm_table.shm_pages[i].frame = 0;
+                shm_table.shm_pages[i].refcnt = 0;
+            }
+            release(&(shm_table.lock));
+            return 0;
+        }
+    }
+    release(&(shm_table.lock));
+    cprintf("Memory item not found\n");
+    return -1; //error
 }
 
 
