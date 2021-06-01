@@ -104,10 +104,9 @@ int shm_close(int id) {
     for (i = 0; i< 64; i++) {
         if(shm_table.shm_pages[i].id == id) {
             shm_table.shm_pages[i].refcnt--;
-            if(shm_table.shm_pages[i].refcnt < 1) {
+            if(shm_table.shm_pages[i].refcnt == 0) {
                 shm_table.shm_pages[i].id = 0;
                 shm_table.shm_pages[i].frame = 0;
-                shm_table.shm_pages[i].refcnt = 0;
             }
             release(&(shm_table.lock));
             return 0;
