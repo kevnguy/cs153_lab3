@@ -65,6 +65,7 @@ int shm_open(int id, char **pointer) {
             if(shm_table.shm_pages[i].frame == 0){
                 cprintf("shm_open: kalloc() failed\n");
                 release(&(shm_table.lock));
+                deallocuvm(p->pgdir, PGROUNDUP(p->sz), PGROUNDUP(p->sz +PGSIZE));
                 return -1;
             }
             shm_table.shm_pages[i].refcnt = 1;
@@ -75,6 +76,8 @@ int shm_open(int id, char **pointer) {
             if(resMap == -1){
                 cprintf("shm_open: mappages failed\n");
                 release(&(shm_table.lock));
+                deallocuvm(p->pgdir, PGROUNDUP(p->sz), PGROUNDUP(p->sz +PGSIZE));
+                kfree(shm_table.shm_pages[i].frame);
                 return -1;
             } else{
                 //cprintf("Case2: Mapped\n");
@@ -99,4 +102,31 @@ int shm_close(int id) {
 
 return 0; //added to remove compiler warning -- you should decide what to return
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
