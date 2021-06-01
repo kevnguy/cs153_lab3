@@ -87,7 +87,7 @@ int shm_open(int id, char **pointer) {
     }
     cprintf("Nothing happened\n");
     release(&(shm_table.lock));
-    return 0; //added to remove compiler warning -- you should decide what to return
+    return -1; //added to remove compiler warning -- you should decide what to return
 }
 
 
