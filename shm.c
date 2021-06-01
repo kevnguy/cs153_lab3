@@ -50,7 +50,7 @@ int shm_open(int id, char **pointer) {
                 shm_table.shm_pages[i].refcnt++;
                 release(&(shm_table.lock));
                 *pointer = (char*)PGROUNDUP(p->sz);
-                p->sz += PGSIZE;
+                p->sz = PGROUNDUP(p->sz) + PGSIZE;
                 return 0;
             }
         }
@@ -83,7 +83,7 @@ int shm_open(int id, char **pointer) {
                 //cprintf("Case2: Mapped\n");
                 release(&(shm_table.lock));
                 *pointer = (char*)PGROUNDUP(p->sz);
-                p->sz += PGSIZE;
+                p->sz = PGROUNDUP(p->sz) + PGSIZE;
                 return 0;
             }
         }
@@ -117,31 +117,3 @@ int shm_close(int id) {
     cprintf("Memory item not found\n");
     return -1; //error
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
